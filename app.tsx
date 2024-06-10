@@ -2,7 +2,15 @@
 const React = {
   createElement: (tag, props, ...children) => {
     if (typeof tag === "function") {
-      return tag(props, ...children);
+      try {
+        return tag(props, ...children);
+      } catch ({ promise, key, fallback }) {
+        promise.then((value) => {
+          resourceCache[key] = value;
+          reRender();
+        });
+        return fallback;
+      }
     }
     const el = {
       tag,
@@ -51,15 +59,39 @@ const useState = (initialState) => {
 };
 
 const reRender = () => {
-  const rootNode = document.getElementById('myapp');
-  rootNode.innerHTML = '';
+  const rootNode = document.getElementById("myapp");
+  rootNode.innerHTML = "";
   myAppStateCursor = 0;
   render(<App />, rootNode);
 };
 
+const resourceCache = {};
+const createResource = (asyncTask, key, fallback) => {
+  if (resourceCache[key]) return resourceCache[key];
+  throw { promise: asyncTask(), key, fallback };
+};
+
+// Remote API
+const photoURL = "https://picsum.photos/200";
+const getMyAwesomePic = () => {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => resolve(photoURL), 1500);
+  });
+};
+
+const Suspense = (props, children) => {
+  const { fallback, key, task } = props;
+  const resource = createResource(task, key, fallback);
+  return children;
+};
+
+const MyImage = ({ key }) => {
+  return <img src={resourceCache[key]} alt={key} />;
+};
+
 // Application
 const App = () => {
-  const [name, setName] = useState('Bhavya');
+  const [name, setName] = useState("Bhavya");
   const [count, setCount] = useState(0);
   return (
     <div draggable>
@@ -73,6 +105,21 @@ const App = () => {
       <h2> Counter value: {`${count}`}</h2>
       <button onclick={() => setCount(count + 1)}>+1</button>
       <button onclick={() => setCount(count - 1)}>-1</button>
+      <h2>Our Photo Album</h2>
+      <Suspense
+        fallback={<h2>Loading image.. photo1</h2>}
+        key={'photo1'}
+        task={getMyAwesomePic}
+      >
+        <MyImage key={'photo1'} />
+      </Suspense>
+      <Suspense
+        fallback={<h2>Loading image... photo2</h2>}
+        key={'photo2'}
+        task={getMyAwesomePic}
+      >
+        <MyImage key={'photo2'} />
+      </Suspense>
     </div>
   );
 };

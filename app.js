@@ -2,7 +2,16 @@
 const React = {
     createElement: (tag, props, ...children) => {
         if (typeof tag === "function") {
-            return tag(props, ...children);
+            try {
+                return tag(props, ...children);
+            }
+            catch ({ promise, key, fallback }) {
+                promise.then((value) => {
+                    resourceCache[key] = value;
+                    reRender();
+                });
+                return fallback;
+            }
         }
         const el = {
             tag,
@@ -42,14 +51,35 @@ const useState = (initialState) => {
     return [myAppState[stateCursor], setState];
 };
 const reRender = () => {
-    const rootNode = document.getElementById('myapp');
-    rootNode.innerHTML = '';
+    const rootNode = document.getElementById("myapp");
+    rootNode.innerHTML = "";
     myAppStateCursor = 0;
     render(React.createElement(App, null), rootNode);
 };
+const resourceCache = {};
+const createResource = (asyncTask, key, fallback) => {
+    if (resourceCache[key])
+        return resourceCache[key];
+    throw { promise: asyncTask(), key, fallback };
+};
+// Remote API
+const photoURL = "https://picsum.photos/200";
+const getMyAwesomePic = () => {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => resolve(photoURL), 1500);
+    });
+};
+const Suspense = (props, children) => {
+    const { fallback, key, task } = props;
+    const resource = createResource(task, key, fallback);
+    return children;
+};
+const MyImage = ({ key }) => {
+    return React.createElement("img", { src: resourceCache[key], alt: key });
+};
 // Application
 const App = () => {
-    const [name, setName] = useState('Bhavya');
+    const [name, setName] = useState("Bhavya");
     const [count, setCount] = useState(0);
     return (React.createElement("div", { draggable: true },
         React.createElement("h2", null,
@@ -62,6 +92,11 @@ const App = () => {
             " Counter value: ",
             `${count}`),
         React.createElement("button", { onclick: () => setCount(count + 1) }, "+1"),
-        React.createElement("button", { onclick: () => setCount(count - 1) }, "-1")));
+        React.createElement("button", { onclick: () => setCount(count - 1) }, "-1"),
+        React.createElement("h2", null, "Our Photo Album"),
+        React.createElement(Suspense, { fallback: React.createElement("h2", null, "Loading image.. photo1"), key: 'photo1', task: getMyAwesomePic },
+            React.createElement(MyImage, { key: 'photo1' })),
+        React.createElement(Suspense, { fallback: React.createElement("h2", null, "Loading image... photo2"), key: 'photo2', task: getMyAwesomePic },
+            React.createElement(MyImage, { key: 'photo2' }))));
 };
 render(React.createElement(App, null), document.getElementById("myapp"));

@@ -1,7 +1,7 @@
 // Library
 const React = {
     createElement: (tag, props, ...children) => {
-        if (typeof tag === 'function') {
+        if (typeof tag === "function") {
             return tag(props, ...children);
         }
         const el = {
@@ -14,7 +14,7 @@ const React = {
 };
 const render = (el, container) => {
     let domEl;
-    if (typeof el === 'string') {
+    if (typeof el === "string") {
         domEl = document.createTextNode(el);
         container.appendChild(domEl);
         return;
@@ -29,11 +29,39 @@ const render = (el, container) => {
     }
     container.appendChild(domEl);
 };
+const myAppState = [];
+let myAppStateCursor = 0;
+const useState = (initialState) => {
+    const stateCursor = myAppStateCursor;
+    myAppState[stateCursor] = myAppState[stateCursor] || initialState;
+    const setState = (newState) => {
+        myAppState[stateCursor] = newState;
+        reRender();
+    };
+    myAppStateCursor++;
+    return [myAppState[stateCursor], setState];
+};
+const reRender = () => {
+    const rootNode = document.getElementById('myapp');
+    rootNode.innerHTML = '';
+    myAppStateCursor = 0;
+    render(React.createElement(App, null), rootNode);
+};
 // Application
 const App = () => {
+    const [name, setName] = useState('Bhavya');
+    const [count, setCount] = useState(0);
     return (React.createElement("div", { draggable: true },
-        React.createElement("h2", null, "Hello React!"),
+        React.createElement("h2", null,
+            "Hello ",
+            name,
+            "!"),
         React.createElement("p", null, "I am a pargraph"),
-        React.createElement("input", { type: "text" })));
+        React.createElement("input", { type: "text", value: name, onchange: (e) => setName(e.target.value) }),
+        React.createElement("h2", null,
+            " Counter value: ",
+            `${count}`),
+        React.createElement("button", { onclick: () => setCount(count + 1) }, "+1"),
+        React.createElement("button", { onclick: () => setCount(count - 1) }, "-1")));
 };
-render(React.createElement(App, null), document.getElementById('myapp'));
+render(React.createElement(App, null), document.getElementById("myapp"));

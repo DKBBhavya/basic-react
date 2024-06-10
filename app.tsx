@@ -1,7 +1,7 @@
 // Library
 const React = {
   createElement: (tag, props, ...children) => {
-    if (typeof tag === 'function') {
+    if (typeof tag === "function") {
       return tag(props, ...children);
     }
     const el = {
@@ -16,7 +16,7 @@ const React = {
 const render = (el, container) => {
   let domEl;
 
-  if (typeof el === 'string') {
+  if (typeof el === "string") {
     domEl = document.createTextNode(el);
     container.appendChild(domEl);
     return;
@@ -36,15 +36,44 @@ const render = (el, container) => {
   container.appendChild(domEl);
 };
 
+const myAppState = [];
+let myAppStateCursor = 0;
+
+const useState = (initialState) => {
+  const stateCursor = myAppStateCursor;
+  myAppState[stateCursor] = myAppState[stateCursor] || initialState;
+  const setState = (newState) => {
+    myAppState[stateCursor] = newState;
+    reRender();
+  };
+  myAppStateCursor++;
+  return [myAppState[stateCursor], setState];
+};
+
+const reRender = () => {
+  const rootNode = document.getElementById('myapp');
+  rootNode.innerHTML = '';
+  myAppStateCursor = 0;
+  render(<App />, rootNode);
+};
 
 // Application
 const App = () => {
+  const [name, setName] = useState('Bhavya');
+  const [count, setCount] = useState(0);
   return (
     <div draggable>
-      <h2>Hello React!</h2>
+      <h2>Hello {name}!</h2>
       <p>I am a pargraph</p>
-      <input type="text" />
+      <input
+        type="text"
+        value={name}
+        onchange={(e) => setName(e.target.value)}
+      />
+      <h2> Counter value: {`${count}`}</h2>
+      <button onclick={() => setCount(count + 1)}>+1</button>
+      <button onclick={() => setCount(count - 1)}>-1</button>
     </div>
   );
 };
-render(<App />, document.getElementById('myapp'));
+render(<App />, document.getElementById("myapp"));

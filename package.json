@@ -1,0 +1,22 @@
+{
+  "name": "basic-react",
+  "version": "1.0.0",
+  "description": "Implementation of a basic version of react from scratch",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tsc -w"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DKBBhavya/Basic-react.git"
+  },
+  "author": "dkbbhavya",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/DKBBhavya/Basic-react/issues"
+  },
+  "homepage": "https://github.com/DKBBhavya/Basic-react#readme",
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}

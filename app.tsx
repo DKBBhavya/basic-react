@@ -58,10 +58,21 @@ const useState = (initialState) => {
   return [myAppState[stateCursor], setState];
 };
 
+const myAppRef = [];
+let myAppRefCursor = 0;
+
+const useRef = (initialValue) => {
+  const refCursor = myAppRefCursor;
+  myAppRef[refCursor] = myAppRef[refCursor] || initialValue;
+  myAppRefCursor++;
+  return { current: myAppRef[refCursor] };
+};
+
 const reRender = () => {
   const rootNode = document.getElementById("myapp");
   rootNode.innerHTML = "";
   myAppStateCursor = 0;
+  myAppRefCursor = 0;
   render(<App />, rootNode);
 };
 
@@ -93,32 +104,36 @@ const MyImage = ({ key }) => {
 const App = () => {
   const [name, setName] = useState("Bhavya");
   const [count, setCount] = useState(0);
+  const initialName = useRef(name);
+  const initialCount = useRef(count);
   return (
     <div draggable>
-      <h2>Hello {name}!</h2>
+      <h2>
+        Hello {name} | {initialName.current}!
+      </h2>
       <p>I am a pargraph</p>
       <input
         type="text"
         value={name}
         onchange={(e) => setName(e.target.value)}
       />
-      <h2> Counter value: {`${count}`}</h2>
+      <h2> Counter value: {`${count} | ${initialCount.current}`}</h2>
       <button onclick={() => setCount(count + 1)}>+1</button>
       <button onclick={() => setCount(count - 1)}>-1</button>
       <h2>Our Photo Album</h2>
       <Suspense
         fallback={<h2>Loading image.. photo1</h2>}
-        key={'photo1'}
+        key={"photo1"}
         task={getMyAwesomePic}
       >
-        <MyImage key={'photo1'} />
+        <MyImage key={"photo1"} />
       </Suspense>
       <Suspense
         fallback={<h2>Loading image... photo2</h2>}
-        key={'photo2'}
+        key={"photo2"}
         task={getMyAwesomePic}
       >
-        <MyImage key={'photo2'} />
+        <MyImage key={"photo2"} />
       </Suspense>
     </div>
   );

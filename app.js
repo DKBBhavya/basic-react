@@ -50,10 +50,19 @@ const useState = (initialState) => {
     myAppStateCursor++;
     return [myAppState[stateCursor], setState];
 };
+const myAppRef = [];
+let myAppRefCursor = 0;
+const useRef = (initialValue) => {
+    const refCursor = myAppRefCursor;
+    myAppRef[refCursor] = myAppRef[refCursor] || initialValue;
+    myAppRefCursor++;
+    return { current: myAppRef[refCursor] };
+};
 const reRender = () => {
     const rootNode = document.getElementById("myapp");
     rootNode.innerHTML = "";
     myAppStateCursor = 0;
+    myAppRefCursor = 0;
     render(React.createElement(App, null), rootNode);
 };
 const resourceCache = {};
@@ -81,22 +90,26 @@ const MyImage = ({ key }) => {
 const App = () => {
     const [name, setName] = useState("Bhavya");
     const [count, setCount] = useState(0);
+    const initialName = useRef(name);
+    const initialCount = useRef(count);
     return (React.createElement("div", { draggable: true },
         React.createElement("h2", null,
             "Hello ",
             name,
+            " | ",
+            initialName.current,
             "!"),
         React.createElement("p", null, "I am a pargraph"),
         React.createElement("input", { type: "text", value: name, onchange: (e) => setName(e.target.value) }),
         React.createElement("h2", null,
             " Counter value: ",
-            `${count}`),
+            `${count} | ${initialCount.current}`),
         React.createElement("button", { onclick: () => setCount(count + 1) }, "+1"),
         React.createElement("button", { onclick: () => setCount(count - 1) }, "-1"),
         React.createElement("h2", null, "Our Photo Album"),
-        React.createElement(Suspense, { fallback: React.createElement("h2", null, "Loading image.. photo1"), key: 'photo1', task: getMyAwesomePic },
-            React.createElement(MyImage, { key: 'photo1' })),
-        React.createElement(Suspense, { fallback: React.createElement("h2", null, "Loading image... photo2"), key: 'photo2', task: getMyAwesomePic },
-            React.createElement(MyImage, { key: 'photo2' }))));
+        React.createElement(Suspense, { fallback: React.createElement("h2", null, "Loading image.. photo1"), key: "photo1", task: getMyAwesomePic },
+            React.createElement(MyImage, { key: "photo1" })),
+        React.createElement(Suspense, { fallback: React.createElement("h2", null, "Loading image... photo2"), key: "photo2", task: getMyAwesomePic },
+            React.createElement(MyImage, { key: "photo2" }))));
 };
 render(React.createElement(App, null), document.getElementById("myapp"));

@@ -63,9 +63,51 @@ let myAppRefCursor = 0;
 
 const useRef = (initialValue) => {
   const refCursor = myAppRefCursor;
-  myAppRef[refCursor] = myAppRef[refCursor] || initialValue;
+  myAppRef[refCursor] = myAppRef[refCursor] || { current: initialValue };
   myAppRefCursor++;
-  return { current: myAppRef[refCursor] };
+  return myAppRef[refCursor];
+};
+
+const checkDependenciesChanged = (prevDeps, newDeps) => {
+  return newDeps.some((dep, index) => {
+    return !Object.is(dep, prevDeps[index]);
+  });
+};
+
+const useEffect = (fn, deps = null) => {
+  const firstTimeRef = useRef(true);
+  const depsRef = useRef(deps);
+
+  if (firstTimeRef.current) {
+    firstTimeRef.current = false;
+    const cleanUp = fn();
+    return () => {
+      if (cleanUp && typeof cleanUp === "function") {
+        cleanUp();
+      }
+    };
+  }
+
+  if (!deps) {
+    const cleanUp = fn();
+    return () => {
+      if (cleanUp && typeof cleanUp === "function") {
+        cleanUp();
+      }
+    };
+  }
+
+  const isDepsChanged = checkDependenciesChanged(depsRef.current, deps);
+
+  if (isDepsChanged) {
+    const cleanUp = fn();
+    depsRef.current = deps;
+    return () => {
+      if (cleanUp && typeof cleanUp === "function") {
+        cleanUp();
+      }
+    };
+  }
 };
 
 const reRender = () => {
@@ -106,6 +148,15 @@ const App = () => {
   const [count, setCount] = useState(0);
   const initialName = useRef(name);
   const initialCount = useRef(count);
+  useEffect(() => {
+    console.log("every render");
+  });
+  useEffect(() => {
+    console.log("initial render");
+  }, []);
+  useEffect(() => {
+    console.log(`count change ${count}`);
+  }, [count]);
   return (
     <div draggable>
       <h2>
